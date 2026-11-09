@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#07111f">
+<title>JARVIS — Personal Assistant</title>
+<style>
+:root{color-scheme:dark;--cyan:#63e8ff;--blue:#247bff;--muted:#8aa8bd}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 25%,#12304b 0,#07111f 52%,#030811 100%);color:#eafaff;font-family:system-ui,-apple-system,Segoe UI,sans-serif}
+main{max-width:680px;margin:auto;padding:22px 18px 34px}
+header{text-align:center;padding:18px 0 8px}
+.eyebrow{letter-spacing:.35em;color:var(--cyan);font-size:11px}
+h1{font-size:32px;letter-spacing:.18em;margin:8px 0 4px;text-shadow:0 0 18px #29bfff}
+.sub{color:var(--muted);font-size:13px}
+.ring-wrap{display:grid;place-items:center;margin:25px auto 20px}
+.ring{width:210px;height:210px;border-radius:50%;border:1px solid #3bbfe8;box-shadow:0 0 20px #1687bb,inset 0 0 24px #0d6794;display:grid;place-items:center;position:relative;background:radial-gradient(circle,#12314a 0,#071522 62%,#06101b 100%)}
+.ring:before,.ring:after{content:"";position:absolute;border-radius:50%;border:1px solid #278db4}
+.ring:before{inset:13px;border-style:dashed;animation:spin 24s linear infinite}
+.ring:after{inset:28px;opacity:.6}
+.core{width:90px;height:90px;border-radius:50%;border:2px solid var(--cyan);box-shadow:0 0 20px #27cfff,inset 0 0 18px #27cfff;display:grid;place-items:center;color:var(--cyan);font-size:12px;letter-spacing:.12em}
+@keyframes spin{to{transform:rotate(360deg)}}
+button,select{font:inherit}
+.mic{display:block;margin:0 auto;background:linear-gradient(135deg,#1679a8,#1648a4);border:1px solid #66eaff;color:white;border-radius:999px;padding:14px 26px;font-weight:700;box-shadow:0 0 18px #126c9d;cursor:pointer}
+.mic:disabled{opacity:.55}
+.status{text-align:center;color:var(--cyan);font-size:13px;min-height:24px;margin:13px 0}
+.panel{border:1px solid #1e5872;background:#071827cc;border-radius:15px;padding:15px;margin:14px 0;box-shadow:0 8px 28px #0004}
+.panel h2{font-size:12px;letter-spacing:.18em;color:var(--cyan);margin:0 0 10px}
+#heard,#reply{line-height:1.5;min-height:24px;overflow-wrap:anywhere}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{display:block;color:var(--muted);font-size:12px;margin-bottom:6px}
+select{width:100%;background:#0b2233;color:#eafaff;border:1px solid #28617a;border-radius:9px;padding:10px}
+.note{font-size:12px;color:#91a9ba;line-height:1.55}
+footer{text-align:center;color:#59788c;font-size:11px;margin-top:20px}
+@media(max-width:380px){.ring{width:185px;height:185px}}
+</style>
+</head>
+<body>
+<main>
+<header>
+ <div class="eyebrow">PERSONAL AI ASSISTANT</div>
+ <h1>J.A.R.V.I.S</h1>
+ <div class="sub">Tamil • English • Your personal assistant</div>
+</header>
+<div class="ring-wrap"><div class="ring"><div class="core">JARVIS<br>ONLINE</div></div></div>
+<button class="mic" id="mic">🎙 TAP TO SPEAK</button>
+<div class="status" id="status">Ready. Tap the microphone to talk.</div>
+<section class="panel"><h2>YOU SAID</h2><div id="heard">Waiting for your command…</div></section>
+<section class="panel"><h2>JARVIS</h2><div id="reply">Good day. I am ready to assist you.</div></section>
+<section class="panel">
+ <h2>VOICE SETTINGS</h2>
+ <div class="controls">
+  <div><label for="language">Recognition language</label><select id="language"><option value="en-IN">English (India)</option><option value="ta-IN">Tamil</option></select></div>
+  <div><label for="voice">Reply voice</label><select id="voice"><option value="auto">Automatic</option><option value="en-IN">English (India)</option><option value="ta-IN">Tamil</option></select></div>
+ </div>
+</section>
+<section class="panel">
+ <h2>TRY SAYING</h2>
+ <div class="note">“Hello JARVIS” • “What time is it?” • “Open Google” • “Torch on” (demo reply only for now)</div>
+</section>
+<section class="panel">
+ <h2>BUILD STATUS</h2>
+ <div class="note">Version 1: interface + tap-to-talk + spoken replies + a few demo commands. AI answers, saved memory and real phone controls are not connected yet. We will add them safely in later steps.</div>
+</section>
+<footer>JARVIS MOBILE • Prototype 01</footer>
+</main>
+<script>
+const mic=document.getElementById('mic'),statusEl=document.getElementById('status'),heard=document.getElementById('heard'),reply=document.getElementById('reply');
+const lang=document.getElementById('language'),voiceChoice=document.getElementById('voice');
+const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+function speak(text){
+ reply.textContent=text;
+ if(!('speechSynthesis' in window)) return;
+ speechSynthesis.cancel();
+ const u=new SpeechSynthesisUtterance(text);
+ const wanted=voiceChoice.value==='auto'?(lang.value==='ta-IN'?'ta-IN':'en-IN'):voiceChoice.value;
+ const voices=speechSynthesis.getVoices();
+ const match=voices.find(v=>v.lang.toLowerCase()===wanted.toLowerCase())||voices.find(v=>v.lang.toLowerCase().startsWith(wanted.slice(0,2)));
+ if(match)u.voice=match;
+ u.rate=.92;u.pitch=.88;speechSynthesis.speak(u);
+}
+function answer(text){
+ const s=text.toLowerCase();
+ if(s.includes('time')||s.includes('mani')) return 'The current time is '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})+'.';
+ if(s.includes('hello')||s.includes('hi')||s.includes('vanakkam')) return 'Hello! I am here and ready to help. Sollunga, what can I do for you?';
+ if(s.includes('your name')||s.includes('nee yaar')) return 'I am JARVIS, your personal assistant.';
+ if(s.includes('open google')) return 'I can add app-opening actions in the next build. For now, please open Chrome manually.';
+ if(s.includes('torch')||s.includes('flashlight')) return 'Torch control is not connected yet. We will add it through Android automation in a later step.';
+ return 'I heard you say: '+text+'. My AI brain is not connected yet. We will connect it in the next build.';
+}
+mic.addEventListener('click',()=>{
+ if(!SpeechRecognition){statusEl.textContent='Speech recognition is not supported in this browser. Try updated Chrome.';return;}
+ const rec=new SpeechRecognition();rec.lang=lang.value;rec.interimResults=false;rec.maxAlternatives=1;
+ mic.disabled=true;statusEl.textContent='Listening…';
+ rec.onresult=e=>{const text=e.results[0][0].transcript;heard.textContent=text;speak(answer(text));};
+ rec.onerror=e=>{statusEl.textContent='Mic issue: '+e.error+'. Check microphone permission and internet connection.';};
+ rec.onend=()=>{mic.disabled=false;if(statusEl.textContent==='Listening…')statusEl.textContent='Ready. Tap the microphone to talk.';else if(statusEl.textContent.startsWith('Listening'))statusEl.textContent='Ready.';};
+ try{rec.start();}catch(e){mic.disabled=false;statusEl.textContent='Could not start microphone. Please try again.';}
+});
+if('speechSynthesis' in window)speechSynthesis.onvoiceschanged=()=>{};
+</script>
+</body>
+</html>
